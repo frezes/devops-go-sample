@@ -6,7 +6,7 @@ pipeline {
   environment {
     REGISTRY = 'docker.io'
     // Docker Hub 用户名
-    DOCKERHUB_USERNAME = 'Your Docker Hub username'
+    DOCKERHUB_USERNAME = 'frezes'
     APP_NAME = 'devops-go-sample'
     // ‘dockerhub’ 即您在 KubeSphere 控制台上创建的 Docker Hub 凭证 ID
     DOCKERHUB_CREDENTIAL = credentials('dockerhub')
@@ -21,36 +21,16 @@ pipeline {
   }  
      
   stages {
-    stage('docker login') {
-      steps {
-        container('go') {
-          sh 'echo $DOCKERHUB_CREDENTIAL_PSW  | docker login -u $DOCKERHUB_CREDENTIAL_USR --password-stdin'
-        }
-      }
-    }
+
        
     stage('build & push') {
       steps {
         container('go') {
           sh 'git clone https://github.com/yuswift/devops-go-sample.git'
           sh 'cd devops-go-sample && docker build -t $REGISTRY/$DOCKERHUB_USERNAME/$APP_NAME .'
-          sh 'docker push $REGISTRY/$DOCKERHUB_USERNAME/$APP_NAME'
         }
       }
     }
-       
-    stage('deploy app to multi cluster') {
-      steps {
-         container('go') {
-            withCredentials([
-              kubeconfigFile(
-                credentialsId: env.KUBECONFIG_CREDENTIAL_ID,
-                variable: 'KUBECONFIG')
-              ]) {
-              sh 'envsubst < devops-go-sample/manifest/multi-cluster-deploy.yaml | kubectl apply -f -'
-              }
-           }
-        }
-      }
-    }
+
   }
+}
